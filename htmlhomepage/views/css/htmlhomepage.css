@@ -34,3 +34,35 @@
     height: auto;
 }
 
+/* Stili per iframe */
+.htmlhomepage-container iframe {
+    max-width: 100%;
+    border: none;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Wrapper responsivo per iframe (opzionale) */
+.htmlhomepage-iframe-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.htmlhomepage-iframe-wrapper.ratio-16-9 {
+    padding-bottom: 56.25%; /* Rapporto 16:9 */
+}
+
+.htmlhomepage-iframe-wrapper.ratio-4-3 {
+    padding-bottom: 75%; /* Rapporto 4:3 */
+}
+
+.htmlhomepage-iframe-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
