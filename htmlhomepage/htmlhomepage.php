@@ -79,11 +79,13 @@ class HtmlHomepage extends Module
         $output = null;
 
         if (Tools::isSubmit('submit' . $this->name)) {
-            $htmlContent = Tools::getValue('HTMLHOMEPAGE_HTML_CONTENT');
+            $htmlContent = Tools::getValue('HTMLHOMEPAGE_HTML_CONTENT', false, false);
             $liveMode = (bool)Tools::getValue('HTMLHOMEPAGE_LIVE_MODE');
 
-            if (!$htmlContent || !Validate::isCleanHtml($htmlContent)) {
+            if ($htmlContent === false || $htmlContent === '') {
                 $output .= $this->displayError($this->l('Contenuto HTML non valido'));
+            } elseif (!$this->isValidHtmlWithIframe($htmlContent)) {
+                $output .= $this->displayError($this->l('Contenuto HTML non valido - sono ammessi solo tag HTML sicuri e iframe'));
             } else {
                 Configuration::updateValue('HTMLHOMEPAGE_HTML_CONTENT', $htmlContent, true);
                 Configuration::updateValue('HTMLHOMEPAGE_LIVE_MODE', $liveMode);
@@ -92,6 +94,36 @@ class HtmlHomepage extends Module
         }
 
         return $output . $this->displayForm();
+    }
+
+    /**
+     * Valida il contenuto HTML permettendo iframe ma bloccando script pericolosi
+     *
+     * @param string $html Contenuto HTML da validare
+     * @return bool True se il contenuto è valido
+     */
+    private function isValidHtmlWithIframe($html)
+    {
+        if (empty($html)) {
+            return true;
+        }
+
+        // Blocca tag script, javascript:, vbscript:, e event handlers
+        $dangerousPatterns = [
+            '/<script\b[^>]*>.*?<\/script>/is',
+            '/javascript\s*:/i',
+            '/vbscript\s*:/i',
+            '/on\w+\s*=\s*["\'][^"\']*["\']/i',
+            '/on\w+\s*=\s*[^\s>]+/i',
+        ];
+
+        foreach ($dangerousPatterns as $pattern) {
+            if (preg_match($pattern, $html)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function displayForm()
@@ -127,10 +159,10 @@ class HtmlHomepage extends Module
                     'label' => $this->l('Contenuto HTML'),
                     'name' => 'HTMLHOMEPAGE_HTML_CONTENT',
                     'lang' => false,
-                    'autoload_rte' => true,
-                    'rows' => 10,
+                    'autoload_rte' => false,
+                    'rows' => 15,
                     'cols' => 100,
-                    'desc' => $this->l('Inserisci il contenuto HTML che vuoi visualizzare nella homepage'),
+                    'desc' => $this->l('Inserisci il contenuto HTML che vuoi visualizzare nella homepage. Sono supportati iframe per embed di video, webcam, mappe, ecc.'),
                 ],
             ],
             'submit' => [
